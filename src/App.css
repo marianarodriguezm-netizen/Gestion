@@ -1646,3 +1646,320 @@ summary:focus-visible {
     transition: none !important;
   }
 }
+/* ---------- 15. Login, avisos y gestión de usuarios ---------- */
+
+/* Pantalla de login: tarjeta centrada, sin menú lateral */
+.login-screen .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.login-screen .page-heading,
+.login-screen .panel,
+.login-screen details.comparison-notice {
+  width: 100%;
+  max-width: 460px;
+}
+
+.login-screen .page-heading {
+  border-left: 1px solid #d8e4f4;
+  border-top: 5px solid var(--blue);
+  text-align: center;
+}
+
+.login-screen .page-heading p {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.login-screen .panel {
+  margin-bottom: 16px;
+}
+
+/* Botón secundario (por ejemplo "Crear una cuenta" / "Ya tengo cuenta") */
+.form-actions button:not(.principal):not([type="submit"]) {
+  padding: 11px 18px;
+  border: 1px solid #d8e4f4;
+  border-radius: 11px;
+  background: #edf4ff;
+  color: #285cc3;
+  font-weight: 700;
+  transition: background 0.2s;
+}
+
+.form-actions button:not(.principal):not([type="submit"]):hover {
+  background: #dceaff;
+}
+
+/* Botones deshabilitados (mientras se verifica la cuenta) */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.principal:disabled:hover,
+button[type="submit"]:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Avisos: error en rojo, confirmación en verde */
+.comparison-notice[role="alert"] {
+  border-color: #f1c7cb;
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.comparison-notice[role="status"] {
+  border-color: #bfe9d6;
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+/* Desplegable "Cuentas de demostración" */
+details.comparison-notice summary {
+  color: var(--blue-dark);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+details.comparison-notice ul {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+details.comparison-notice li {
+  padding: 3px 0;
+}
+
+details.comparison-notice code {
+  padding: 2px 6px;
+  border: 1px solid #cfe1ff;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 12px;
+}
+
+/* Botón de eliminar cuenta (acción destructiva en rojo) */
+.acciones-peligro button {
+  border-color: #f1d5d5;
+  background: #fff0f0;
+  color: var(--red);
+}
+
+.acciones-peligro button:hover {
+  background: #ffe0e0;
+}
+
+/* ---------- 16. Chatbot de ayuda ---------- */
+
+.chat-boton {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue-dark), var(--cyan));
+  color: #fff;
+  font-size: 26px;
+  box-shadow: 0 10px 26px rgba(35, 82, 192, 0.35);
+  transition: transform 0.2s;
+}
+
+.chat-boton:hover {
+  transform: scale(1.06);
+}
+
+.chat-panel {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: 380px;
+  height: min(560px, calc(100vh - 130px));
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 18px 48px rgba(16, 36, 64, 0.22);
+}
+
+.chat-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 16px;
+  background: linear-gradient(110deg, var(--navy), #174a79);
+  color: #fff;
+}
+
+.chat-cabecera h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+}
+
+.chat-cabecera small {
+  color: #a7bdd8;
+  font-size: 12px;
+}
+
+.chat-cerrar {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.chat-cerrar:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.chat-mensajes {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  overflow-y: auto;
+  background: #f7f9fd;
+}
+
+.chat-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 90%;
+}
+
+.chat-msg-bot {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.chat-msg-usuario {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.chat-burbuja {
+  padding: 10px 13px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.chat-bot {
+  border: 1px solid var(--line);
+  border-bottom-left-radius: 4px;
+  background: #fff;
+  color: var(--text);
+}
+
+.chat-usuario {
+  border-bottom-right-radius: 4px;
+  background: linear-gradient(110deg, var(--blue-dark), #3b82f6);
+  color: #fff;
+}
+
+.chat-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.chat-opcion {
+  padding: 7px 12px;
+  border: 1px solid #cfe1ff;
+  border-radius: 20px;
+  background: var(--blue-soft);
+  color: var(--blue-dark);
+  font-size: 12.5px;
+  font-weight: 650;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.chat-opcion:hover {
+  background: #dceaff;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #d6e1ef;
+  border-radius: 11px;
+  background: #f7f9fd;
+  color: #263c58;
+}
+
+.chat-form input:focus {
+  outline: none;
+  border-color: #4b83ef;
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(47, 102, 227, 0.12);
+}
+
+.chat-form button {
+  padding: 0 16px;
+  box-shadow: none;
+}
+
+.chat-form button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.chat-aviso {
+  margin: 0;
+  padding: 0 12px 10px;
+  background: #fff;
+  color: #8492a6;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Móvil: sube el botón y el panel por encima de la barra inferior */
+@media (max-width: 760px) {
+  .chat-boton {
+    right: 14px;
+    bottom: 78px;
+  }
+
+  .chat-panel {
+    right: 10px;
+    bottom: 144px;
+    left: 10px;
+    width: auto;
+    height: min(520px, calc(100vh - 170px));
+  }
+}

@@ -1,5 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import './App.css';
+import PantallaLogin from './PantallaLogin';
+import PanelUsuarios from './PanelUsuarios';
+import ChatbotAyuda from './ChatbotAyuda';
 
 /*
    CONSTANTES Y REGLAS DEL PROCESO (Lean: eliminar aprobaciones que
@@ -47,6 +50,7 @@ const NAV = [
   { id: 'nueva', etiqueta: 'Nueva solicitud', icono: '＋' },
   { id: 'seguimiento', etiqueta: 'Seguimiento', icono: '⌕' },
   { id: 'admin', etiqueta: 'Administración', icono: '◈' },
+  { id: 'usuarios', etiqueta: 'Usuarios', icono: '☺' },
   { id: 'dashboard', etiqueta: 'Indicadores', icono: '▥' },
   { id: 'pruebas', etiqueta: 'Pruebas con usuarios', icono: '✓' },
   { id: 'resultados', etiqueta: 'Resultados de encuestas', icono: '▤' }
@@ -64,7 +68,7 @@ const ROLES = {
     nombre: 'Aprobador',
     descripcion: 'Aprueba o rechaza las solicitudes que lo requieren.',
     icono: '✔',
-    pantallas: ['inicio', 'admin', 'dashboard', 'resultados'],
+    pantallas: ['inicio', 'admin', 'dashboard', 'resultados', 'usuarios'],
     acciones: ['aprobar', 'rechazar']
   },
   tecnico: {
@@ -166,7 +170,7 @@ function crearEvento(estado, detalle, fecha) {
   return { estado, detalle, fecha };
 }
 
-function construirSolicitud({ tipo, descripcion, prioridad, impacto }, fecha = new Date().toISOString()) {
+function construirSolicitud({ tipo, descripcion, prioridad, impacto, creador = null }, fecha = new Date().toISOString()) {
   const requeridas = aprobacionesRequeridas({ tipo, prioridad, impacto });
   const automatica = requeridas === 0;
   const tecnico = SERVICIOS[tipo].tecnico;
@@ -188,6 +192,7 @@ function construirSolicitud({ tipo, descripcion, prioridad, impacto }, fecha = n
     descripcion: descripcion.trim(),
     prioridad,
     impacto,
+    creador,
     estado: automatica ? ESTADOS.EN_PROCESO : ESTADOS.PENDIENTE,
     tecnico: automatica ? tecnico : 'Sin asignar',
     aprobacionesRequeridas: requeridas,
@@ -435,8 +440,8 @@ function EstadoVacio({ titulo, texto, onCrear }) {
    ===================================================================== */
 
 function App() {
-  const [rol, setRol] = useLocalStorage('cloudcare-rol', null);
-  const [solicitudes, setSolicitudes] = useLocalStorage('cloudcare-solicitudes', []);
+  const [sesion, setSesion] = useLocalStorage('cloudcare-sesion', null);
+  const rol = sesion?.rol; const [solicitudes, setSolicitudes] = useLocalStorage('cloudcare-solicitudes', []);
   const [pruebas, setPruebas] = useLocalStorage('cloudcare-pruebas', []);
   const [pantalla, setPantalla] = useState('inicio');
 
@@ -474,16 +479,15 @@ function App() {
   const rolActual = ROLES[rol];
 
   /* ----- Acciones ----- */
-
-  function iniciarSesion(clave) {
-    setRol(clave);
-    setPantalla('inicio');
-  }
-
   function cerrarSesion() {
-    setRol(null);
+    setSesion(null);
     setPantalla('inicio');
   }
+
+  function abrirNuevaConTipo(tipo) {
+  actualizarForm({ tipo });
+  setPantalla('nueva');
+}
 
   function actualizarForm(cambios) {
     setForm(actual => {
@@ -505,8 +509,7 @@ function App() {
     }
 
     setErrorForm('');
-    setSolicitudes(actuales => [construirSolicitud(form), ...actuales]);
-    setForm(actual => ({
+    setSolicitudes(actuales => [construirSolicitud({ ...form, creador: sesion.usuario }), ...actuales]); setForm(actual => ({
       ...actual,
       descripcion: '',
       prioridad: prioridadSugerida(actual.tipo, 'Una persona'),
@@ -516,6 +519,7 @@ function App() {
   }
 
   function ejecutarAccion(id, accion) {
+    if (!rolActual?.acciones.includes(accion.tipo)) return;
     setSolicitudes(actuales => actuales.map(s => (s.id === id ? aplicarAccion(s, accion) : s)));
   }
 
@@ -544,27 +548,12 @@ function App() {
 
   if (!rolActual) {
     return (
-      <div className="app">
-        <div className="workspace">
-          <main className="content">
-            <div className="page-heading">
-              <span className="eyebrow">CLOUDCARE</span>
-              <h2>Inicia sesión</h2>
-              <p>Elige tu rol para ver las opciones que te corresponden.</p>
-            </div>
-            <div className="quick-grid">
-              {Object.entries(ROLES).map(([clave, r]) => (
-                <button key={clave} className="quick-card quick-blue" onClick={() => iniciarSesion(clave)}>
-                  <span className="quick-icon">{r.icono}</span>
-                  <h3>{r.nombre}</h3>
-                  <p>{r.descripcion}</p>
-                  <span className="quick-link">Ingresar como {r.nombre.toLowerCase()}</span>
-                </button>
-              ))}
-            </div>
-          </main>
-        </div>
-      </div>
+      <PantallaLogin
+        onLogin={nuevaSesion => {
+          setSesion(nuevaSesion);
+          setPantalla('inicio');
+        }}
+      />
     );
   }
 
@@ -574,7 +563,10 @@ function App() {
   const pantallaActual = rolActual.pantallas.includes(pantalla) ? pantalla : 'inicio';
   const tituloPantalla = NAV.find(item => item.id === pantallaActual)?.etiqueta;
   const aprobacionesPreview = aprobacionesRequeridas(form);
-  const accesosRapidos = menu.filter(item => item.id !== 'inicio' && item.id !== 'pruebas' && item.id !== 'resultados');
+  const accesosRapidos = menu.filter(
+    item => !['inicio', 'pruebas', 'resultados', 'usuarios'].includes(item.id)
+  );
+  const misSolicitudes = solicitudes.filter(s => s.creador === sesion.usuario);
 
   return (
     <div className="app">
@@ -816,17 +808,17 @@ function App() {
                   <div className="panel-heading-icon">⌕</div>
                   <div>
                     <h3>Mis solicitudes</h3>
-                    <p>{solicitudes.length} solicitudes en el sistema</p>
+                    <p>{misSolicitudes.length} solicitudes en el sistema</p>
                   </div>
                 </div>
-                {solicitudes.length === 0 ? (
+                {misSolicitudes.length === 0 ? (
                   <EstadoVacio
                     titulo="Aún no hay solicitudes"
                     texto="Crea tu primera solicitud para verla aquí."
                     onCrear={() => setPantalla('nueva')}
                   />
                 ) : (
-                  solicitudes.map(s => (
+                  misSolicitudes.map(s => (
                     <TarjetaSolicitud key={s.id} s={s} acciones={rolActual.acciones} modo="seguimiento" onAccion={ejecutarAccion} />
                   ))
                 )}
@@ -1114,6 +1106,8 @@ function App() {
               </section>
             </>
           )}
+          // USUARIOS
+          {pantallaActual === 'usuarios' && <PanelUsuarios sesion={sesion} />}
         </main>
 
         <footer className="app-footer">
@@ -1122,8 +1116,18 @@ function App() {
           <span>Soporte TI · {new Date().getFullYear()}</span>
         </footer>
       </div>
+            <ChatbotAyuda
+        rol={rol}
+        nombreRol={rolActual.nombre}
+        pantallas={rolActual.pantallas}
+        servicios={SERVICIOS}
+        minDescripcion={MIN_DESCRIPCION}
+        onSolicitar={abrirNuevaConTipo}
+        onIr={setPantalla}
+      />
     </div>
   );
 }
+
 
 export default App;
